@@ -1,14 +1,21 @@
 //==========================================================================================
 // AUDIO SETUP
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit just where you're asked to!
+//------------------------------------------------------------------------------------------
+//
 //==========================================================================================
 let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
 
-const dspName = "wind"; // your wind.wasm file
+// Change here to ("tuono") depending on your wasm file name
+const dspName = "wind";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
-// Expose to window for browser or module for npm
+// output to window or npm package module
 if (typeof module === "undefined") {
     window[dspName] = instance;
 } else {
@@ -17,22 +24,31 @@ if (typeof module === "undefined") {
     module.exports = exp;
 }
 
-// CREATE DSP
+// The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
 wind.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
-        console.log("params: ", dspNode.getParams());
-
+        console.log('params: ', dspNode.getParams());
         const jsonString = dspNode.getJSON();
-        dspNodeParams = JSON.parse(jsonString)["ui"][0]["items"];
-
-        // Set a reasonable volume
-        dspNode.setParamValue("/untitled/volume", 0.7);
+        jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
+        dspNodeParams = jsonParams
+        // const exampleMinMaxParam = findByAddress(dspNodeParams, "/thunder/rumble");
+        // // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
+        // const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
+        // console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
     });
+
 
 //==========================================================================================
 // INTERACTIONS
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit the next functions to create interactions
+// Decide which parameters you're using and then use playAudio to play the Audio
+//------------------------------------------------------------------------------------------
+//
 //==========================================================================================
 
 function accelerationChange(accx, accy, accz) {
@@ -42,10 +58,10 @@ function accelerationChange(accx, accy, accz) {
 function rotationChange(rotx, roty, rotz) {
 }
 
-// function mousePressed() {
-//     // playAudio()
-//     // Use this for debugging from the desktop!
-// }
+function mousePressed() {
+    // playAudio()
+    // Use this for debugging from the desktop!
+}
 
 function deviceMoved() {
     movetimer = millis();
@@ -71,23 +87,28 @@ function getMinMaxParam(address) {
 
 //==========================================================================================
 // AUDIO INTERACTION
+//------------------------------------------------------------------------------------------
+//
+//------------------------------------------------------------------------------------------
+// Edit here to define your audio controls 
+//------------------------------------------------------------------------------------------
+//
 //==========================================================================================
-function playAudio(acceleration) {
-    if (!dspNode || audioContext.state === 'suspended') return;
 
-    // Map acceleration magnitude to force 0–1
-    const force = acceleration ? Math.min(acceleration / 3, 1) : 0.5;
-
-    dspNode.setParamValue("/untitled/wind/force", force);
-
-    // optional: add subtle vibrato/randomness if your DSP supports it
-    // dspNode.setParamValue("/untitled/wind/vibratoFreq", Math.random() * 5 + 2);
-    // dspNode.setParamValue("/untitled/wind/vibratoGain", Math.random() * 0.2);
-
-    // reset force quickly
-    setTimeout(() => dspNode.setParamValue("/untitled/wind/force", 0), 150);
+function playAudio() {
+    if (!dspNode) {
+        return;
+    }
+    if (audioContext.state === 'suspended') {
+        return;
+    }
+    dspNode.setParamValue("/untitled/wind/force", 1)
+    setTimeout(() => { dspNode.setParamValue("/untitled/wind/force", 0) }, 100);
 }
 
+//==========================================================================================
+// END
+//==========================================================================================
 //==========================================================================================
 // END
 //==========================================================================================
