@@ -35,47 +35,38 @@ instance.createDSP(audioContext, 1024)
 // INTERACTIONS
 //==========================================================================================
 
-// Trigger on accelerometer
 function accelerationChange(accx, accy, accz) {
-    const accTotal = Math.sqrt(accx*accx + accy*accy + accz*accz);
-    if(accTotal > 0.5) { // tweak threshold
-        playAudio(accTotal);
-    }
+    // playAudio()
 }
 
-// Optional rotation triggers
-function rotationChange(rotx, roty, rotz) { }
+function rotationChange(rotx, roty, rotz) {
+}
 
-// // Desktop testing
-// function mousePressed() {
-//     playAudio(0.5);
-// }
+function mousePressed() {
+    // playAudio()
+    // Use this for debugging from the desktop!
+}
 
-// Trigger on device movement
 function deviceMoved() {
     movetimer = millis();
     statusLabels[2].style("color", "pink");
-    playAudio(0.8);
 }
 
 function deviceTurned() {
     threshVals[1] = turnAxis;
 }
-
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio(1);
+    playAudio();
 }
 
-//==========================================================================================
-// HELPER FUNCTION
-//==========================================================================================
 function getMinMaxParam(address) {
-    const param = findByAddress(dspNodeParams, address);
-    const [minVal, maxVal] = getParamMinMax(param);
-    console.log('Min value:', minVal, 'Max value:', maxVal);
-    return [minVal, maxVal];
+    const exampleMinMaxParam = findByAddress(dspNodeParams, address);
+    // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
+    const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
+    console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
+    return [exampleMinValue, exampleMaxValue]
 }
 
 //==========================================================================================
