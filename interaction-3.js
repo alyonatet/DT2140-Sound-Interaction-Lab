@@ -1,12 +1,14 @@
+//==========================================================================================
+// AUDIO SETUP
+//==========================================================================================
 let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
 
-// Change here to ("tuono") depending on your wasm file name
-const dspName = "wind";
+const dspName = "wind"; // your wind.wasm file
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
-// output to window or npm package module
+// Expose to window for browser or module for npm
 if (typeof module === "undefined") {
     window[dspName] = instance;
 } else {
@@ -15,91 +17,90 @@ if (typeof module === "undefined") {
     module.exports = exp;
 }
 
-// The name should be the same as the WASM file, so change tuono with brass if you use brass.wasm
-wind.createDSP(audioContext, 1024)
+// CREATE DSP
+instance.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
-        console.log('params: ', dspNode.getParams());
-        const jsonString = dspNode.getJSON();
-        jsonParams = JSON.parse(jsonString)["ui"][0]["items"];
-        dspNodeParams = jsonParams
-        // const exampleMinMaxParam = findByAddress(dspNodeParams, "/thunder/rumble");
-        // // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
-        // const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
-        // console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
-    });
+        console.log("params: ", dspNode.getParams());
 
+        const jsonString = dspNode.getJSON();
+        dspNodeParams = JSON.parse(jsonString)["ui"][0]["items"];
+
+        // Set a reasonable volume
+        dspNode.setParamValue("/untitled/volume", 0.7);
+    });
 
 //==========================================================================================
 // INTERACTIONS
-//------------------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------------------
-// Edit the next functions to create interactions
-// Decide which parameters you're using and then use playAudio to play the Audio
-//------------------------------------------------------------------------------------------
-//
 //==========================================================================================
 
+// Trigger on accelerometer
 function accelerationChange(accx, accy, accz) {
-    // playAudio()
+    const accTotal = Math.sqrt(accx*accx + accy*accy + accz*accz);
+    if(accTotal > 0.5) { // tweak threshold
+        playAudio(accTotal);
+    }
 }
 
-function rotationChange(rotx, roty, rotz) {
-}
+// Optional rotation triggers
+function rotationChange(rotx, roty, rotz) { }
 
+// // Desktop testing
 // function mousePressed() {
-//     playAudio(mouseX/windowWidth)
-//     // Use this for debugging from the desktop!
+//     playAudio(0.5);
 // }
 
+// Trigger on device movement
 function deviceMoved() {
     movetimer = millis();
     statusLabels[2].style("color", "pink");
+    playAudio(0.8);
 }
 
 function deviceTurned() {
     threshVals[1] = turnAxis;
 }
+
 function deviceShaken() {
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
+    playAudio(1);
 }
 
+//==========================================================================================
+// HELPER FUNCTION
+//==========================================================================================
 function getMinMaxParam(address) {
-    const exampleMinMaxParam = findByAddress(dspNodeParams, address);
-    // ALWAYS PAY ATTENTION TO MIN AND MAX, ELSE YOU MAY GET REALLY HIGH VOLUMES FROM YOUR SPEAKERS
-    const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
-    console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
-    return [exampleMinValue, exampleMaxValue]
+    const param = findByAddress(dspNodeParams, address);
+    const [minVal, maxVal] = getParamMinMax(param);
+    console.log('Min value:', minVal, 'Max value:', maxVal);
+    return [minVal, maxVal];
 }
 
 //==========================================================================================
 // AUDIO INTERACTION
-//------------------------------------------------------------------------------------------
-//
-//------------------------------------------------------------------------------------------
-// Edit here to define your audio controls 
-//------------------------------------------------------------------------------------------
-//
 //==========================================================================================
+function playAudio(acceleration) {
+    if (!dspNode || audioContext.state === 'suspended') return;
 
-function playAudio(pressure) {
-    if (!dspNode) {
-        return;
-    }
-    if (audioContext.state === 'suspended') {
-        return;
-    }
-    dspNode.setParamValue("/untitled/wind/force", 1)
-    setTimeout(() => { dspNode.setParamValue("/untitled/wind/force", 0) }, 100);
+    // Map acceleration magnitude to force 0–1
+    const force = acceleration ? Math.min(acceleration / 3, 1) : 0.5;
+
+    dspNode.setParamValue("/untitled/wind/force", force);
+
+    // optional: add subtle vibrato/randomness if your DSP supports it
+    // dspNode.setParamValue("/untitled/wind/vibratoFreq", Math.random() * 5 + 2);
+    // dspNode.setParamValue("/untitled/wind/vibratoGain", Math.random() * 0.2);
+
+    // reset force quickly
+    setTimeout(() => dspNode.setParamValue("/untitled/wind/force", 0), 150);
 }
 
 //==========================================================================================
 // END
 //==========================================================================================
+
 // //==========================================================================================
 // // AUDIO SETUP
 // //==========================================================================================
