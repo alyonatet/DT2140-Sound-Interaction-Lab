@@ -18,7 +18,7 @@ if (typeof module === "undefined") {
 }
 
 // CREATE DSP
-instance.createDSP(audioContext, 1024)
+wind.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
         dspNode.connect(audioContext.destination);
