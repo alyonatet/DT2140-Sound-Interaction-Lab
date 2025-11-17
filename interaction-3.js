@@ -150,10 +150,10 @@ function accelerationChange(accx, accy, accz) {
 function rotationChange(rotx, roty, rotz) {
 }
 
-function mousePressed() {
-    playAudio(mouseX/windowWidth)
-    // Use this for debugging from the desktop!
-}
+// function mousePressed() {
+//     playAudio(mouseX/windowWidth)
+//     // Use this for debugging from the desktop!
+// }
 
 function deviceMoved() {
     movetimer = millis();
