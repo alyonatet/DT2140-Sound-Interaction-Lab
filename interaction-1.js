@@ -6,7 +6,6 @@ let dspNode = null;
 let dspNodeParams = null;
 let jsonParams = null;
 
-// Using your WASM name (bubble.wasm)
 const dspName = "bubble";
 const instance = new FaustWasm2ScriptProcessor(dspName);
 
@@ -19,7 +18,7 @@ if (typeof module === "undefined") {
     module.exports = exp;
 }
 
-// Create DSP
+// create DSP
 bubble.createDSP(audioContext, 1024)
     .then(node => {
         dspNode = node;
@@ -36,25 +35,24 @@ bubble.createDSP(audioContext, 1024)
 // INTERACTIONS
 //==========================================================================================
 
-// Called when phone accelerometer changes
-function accelerationChange(accx, accy, accz) {
-    // (You can use this later if you want)
-}
+// Called when accelerometer changes (you can use later if needed)
+function accelerationChange(accx, accy, accz) {}
 
-// Called when the phone rotates
+// Called when phone rotates
 function rotationChange(rotx, roty, rotz) {
-    // Trigger sound when rotating strongly
-    if (Math.abs(rotx) > 30 || Math.abs(roty) > 30 || Math.abs(rotz) > 30) {
+    // Upside-down detection:
+    // rotx ≈ +180° or -180° when the phone is flipped
+    if (Math.abs(rotx) > 150) {
         playAudio();
     }
 }
 
-// Desktop debugging
+// Desktop testing
 function mousePressed() {
     playAudio();
 }
 
-// Provided helper (do not remove)
+// Provided helper functions (leave as-is)
 function deviceMoved() {
     movetimer = millis();
     statusLabels[2].style("color", "pink");
@@ -63,16 +61,9 @@ function deviceTurned() {
     threshVals[1] = turnAxis;
 }
 function deviceShaken() {
+    // We REMOVE sound trigger here to avoid thunder leftover
     shaketimer = millis();
     statusLabels[0].style("color", "pink");
-    playAudio();
-}
-
-function getMinMaxParam(address) {
-    const exampleMinMaxParam = findByAddress(dspNodeParams, address);
-    const [exampleMinValue, exampleMaxValue] = getParamMinMax(exampleMinMaxParam);
-    console.log('Min value:', exampleMinValue, 'Max value:', exampleMaxValue);
-    return [exampleMinValue, exampleMaxValue];
 }
 
 //==========================================================================================
@@ -84,20 +75,15 @@ function playAudio() {
     if (!dspNode) return;
     if (audioContext.state === "suspended") return;
 
-    // This is your bubble trigger parameter
-    const triggerParam = "/bubble/drop";
+    const trigger = "/bubble/drop";
 
-    // Trigger a short burst
-    dspNode.setParamValue(triggerParam, 1);
-    setTimeout(() => {
-        dspNode.setParamValue(triggerParam, 0);
-    }, 80);
+    dspNode.setParamValue(trigger, 1);
+    setTimeout(() => dspNode.setParamValue(trigger, 0), 80);
 }
 
 //==========================================================================================
 // END
 //==========================================================================================
-
 
 // //==========================================================================================
 // // AUDIO SETUP
